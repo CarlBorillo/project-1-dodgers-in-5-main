@@ -10,9 +10,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "algorithms.hpp"
-#include <optional> // for std::optional
 #include <unordered_map>
-#include <span>
+#include <optional>
+#include <vector>
+#include <string>
+
+namespace algorithms {
+
 
 std::vector<int>::const_iterator algorithms::find_dip(const std::vector<int>& values) {
 
@@ -22,47 +26,32 @@ std::vector<int>::const_iterator algorithms::find_dip(const std::vector<int>& va
   return values.end();
 }
 
-std::optional<algorithms::span> algorithms::longest_balanced_span(const std::vector<int>& values) {
+std::optional<span> algorithms::longest_balanced_span(const std::vector<int>& V) {
 
+    int n = static_cast<int>(V.size());
+    std::optional<span> best = std::nullopt;
 
+    for (int s = 0; s <= n; ++s) {
+        for (int e = s + 1; e <= n; ++e) {
 
-    std::unordered_map<long long, int> first_seen;   // prefix sum → earliest position (+1)
-    first_seen.reserve(values.size() * 2 + 1);
-    first_seen[0] = 0;                               // zero sum occurs "before" index 0
+            int sum = 0;
+            for (int i = s; i < e; ++i) {
+                sum += V[i];
+            }
 
-    long long running_sum = 0;
-    int left_best  = -1;
-    int right_best = -1;
-    int width_best = 0;
+            if (sum == 0) {
+                if (!best.has_value() ||
+                    (e - s) >= static_cast<int>(best->size())) {
 
-    const int n = static_cast<int>(values.size());
-    for (int i = 0; i < n; ++i) {
-        running_sum += static_cast<long long>(values[i]);
-
-        auto iter = first_seen.find(running_sum);
-        if (iter == first_seen.end()) {
-            // First occurrence of this running sum
-            first_seen.emplace(running_sum, i + 1);
-        } else {
-            // Repeated sum: range [iter->second, i+1) sums to zero
-            const int start = iter->second;
-            const int end   = i + 1;
-            const int span_len = end - start;
-
-            // Update if longer, or same length but starts later (prefer "last" span)
-            if (span_len > width_best || (span_len == width_best && start > left_best)) {
-                width_best  = span_len;
-                left_best   = start;
-                right_best  = end;
+                    best = span(V.begin() + s, V.begin() + e);
+                }
             }
         }
     }
 
-    if (width_best == 0) {
-        return std::nullopt;
-    }
-    return span(values.begin() + left_best, values.begin() + right_best);
+    return best;
 }
+
 
 
 
@@ -73,3 +62,5 @@ std::string algorithms::telegraph_style(const std::string& s) {
   // comment.
   return "";
 }
+
+} // namespace algorithms
